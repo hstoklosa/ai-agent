@@ -21,6 +21,11 @@ def parse_args():
         type=str,
         help="The prompt for the AI agent to process."
     )
+    parser.add_argument(
+        "--verbose", 
+        action="store_true", 
+        help="Enable verbose output"
+    )
     return parser.parse_args()
 
 
@@ -34,6 +39,9 @@ def generate_content(client, messages):
 def main():
     args = parse_args()
 
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+
     client = genai.Client(api_key=GEMINI_API_KEY)
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
     response = generate_content(client, messages)
@@ -41,8 +49,10 @@ def main():
     if response.usage_metadata is None:
         raise RuntimeError("Usage metadata is not available")
 
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+    if args.verbose:
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
     print(response.text)
 
 
