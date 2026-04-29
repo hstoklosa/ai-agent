@@ -1,11 +1,13 @@
 import argparse
 import os 
-from dotenv import load_dotenv
+from dotenv import load_dotenv; load_dotenv()
 
 from google import genai
 from google.genai import types
 
-load_dotenv()
+from prompts import system_prompt
+from call_function import available_functions
+
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -32,9 +34,15 @@ def parse_args():
 def generate_content(client, messages):
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt,
+            temperature=0
+        ),
     )
     return response
+
 
 def main():
     args = parse_args()
@@ -54,6 +62,10 @@ def main():
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
     print(response.text)
+
+    if response.function_calls:
+        for call in response.function_calls:
+            print(f"Calling function: {call.name}({call.args})")
 
 
 if __name__ == "__main__":
