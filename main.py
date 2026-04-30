@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import call_function, available_functions
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -64,8 +64,21 @@ def main():
     print(response.text)
 
     if response.function_calls:
+        function_results = []
         for call in response.function_calls:
-            print(f"Calling function: {call.name}({call.args})")
+            function_call_result = call_function(call, args.verbose)
+
+            if not function_call_result.parts:
+                raise Exception("No parts")
+            if function_call_result.parts[0].function_response is None:
+                raise Exception("Response none")
+            
+            function_results.append(function_call_result.parts[0])
+
+            if args.verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+
 
 
 if __name__ == "__main__":
